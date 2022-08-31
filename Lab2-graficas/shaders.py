@@ -1,13 +1,14 @@
-import lbmath as lpm
+import lbmath as lbm
 import numpy as np
+import random
 def flat(render, **kwargs):
-    # Normal calculada por poligono
+
     u, v, w = kwargs["baryCoords"]
     b, g, r = kwargs["vColor"]
     tA, tB, tC = kwargs["texCoords"]
     triangleNormal = kwargs["triangleNormal"]
 
-    b /= 255 
+    b /= 255
     g /= 255
     r /= 255
 
@@ -22,7 +23,8 @@ def flat(render, **kwargs):
         g *= texColor[1]
         r *= texColor[0]
 
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
 
     b *= intensity
     g *= intensity
@@ -33,8 +35,9 @@ def flat(render, **kwargs):
     else:
         return 0,0,0
 
+
 def gourad(render, **kwargs):
-    # Normal calculada por vertice
+
     u, v, w = kwargs["baryCoords"]
     b, g, r = kwargs["vColor"]
     tA, tB, tC = kwargs["texCoords"]
@@ -55,12 +58,13 @@ def gourad(render, **kwargs):
         g *= texColor[1]
         r *= texColor[0]
 
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
-                               nA[1] * u + nB[1] * v + nC[1] * w,
-                               nA[2] * u + nB[2] * v + nC[2] * w]
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
 
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
-    
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
+
     b *= intensity
     g *= intensity
     r *= intensity
@@ -69,6 +73,7 @@ def gourad(render, **kwargs):
         return r, g, b
     else:
         return 0,0,0
+
 
 def unlit(render, **kwargs):
     u, v, w = kwargs["baryCoords"]
@@ -92,6 +97,7 @@ def unlit(render, **kwargs):
 
     return r, g, b
 
+
 def toon(render, **kwargs):
 
     u, v, w = kwargs["baryCoords"]
@@ -114,11 +120,12 @@ def toon(render, **kwargs):
         g *= texColor[1]
         r *= texColor[0]
 
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
-                               nA[1] * u + nB[1] * v + nC[1] * w,
-                               nA[2] * u + nB[2] * v + nC[2] * w]
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
 
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
 
     if intensity < 0.2:
         intensity = 0.1
@@ -137,6 +144,7 @@ def toon(render, **kwargs):
         return r, g, b
     else:
         return 0,0,0
+
 
 def glow(render, **kwargs):
 
@@ -160,21 +168,22 @@ def glow(render, **kwargs):
         g *= texColor[1]
         r *= texColor[0]
 
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
-                               nA[1] * u + nB[1] * v + nC[1] * w,
-                               nA[2] * u + nB[2] * v + nC[2] * w]
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
 
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
 
     b *= intensity
     g *= intensity
     r *= intensity
 
-    camForward = (render.camMatrix.item(0,2),
-                  render.camMatrix.item(1,2),
-                  render.camMatrix.item(2,2))
+    camForward = (render.camMatrix[0][2],
+                  render.camMatrix[1][2],
+                  render.camMatrix[2][2])
 
-    glowAmount = 1 - lpm.productoPunto(triangleNormal, camForward)
+    glowAmount = 1 - lbm.dot(triangleNormal, camForward)
 
     if glowAmount <= 0: glowAmount = 0
 
@@ -192,6 +201,7 @@ def glow(render, **kwargs):
         return r, g, b
     else:
         return 0,0,0
+
 
 def textureBlend(render, **kwargs):
     # Normal calculada por vertice
@@ -215,11 +225,12 @@ def textureBlend(render, **kwargs):
         g *= texColor[1]
         r *= texColor[0]
 
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
-                               nA[1] * u + nB[1] * v + nC[1] * w,
-                               nA[2] * u + nB[2] * v + nC[2] * w]
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
 
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
 
     b *= intensity
     g *= intensity
@@ -245,81 +256,7 @@ def textureBlend(render, **kwargs):
 
     return r, g, b
 
-def grayShader(render, **kwargs):
-    # Normal calculada por vertice
-    u, v, w = kwargs["baryCoords"]
-    b, g, r = kwargs["vColor"]
-    tA, tB, tC = kwargs["texCoords"]
-    nA, nB, nC = kwargs["normals"]
-
-    b /= 255
-    g /= 255
-    r /= 255
-
-    if render.active_texture:
-        # P = Au + Bv + Cw
-        tU = tA[0] * u + tB[0] * v + tC[0] * w
-        tV = tA[1] * u + tB[1] * v + tC[1] * w
-
-        texColor = render.active_texture.getColor(tU, tV)
-
-        b *= texColor[2]
-        g *= texColor[1]
-        r *= texColor[0]
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
-                        nA[1] * u + nB[1] * v + nC[1] * w,
-                        nA[2] * u + nB[2] * v + nC[2] * w]
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
-
-    b *= intensity
-    g *= intensity
-    r *= intensity
-
-    l = (r+b+g)/3
-    if intensity < 0:
-        return 0, 0, 0
-    else: 
-        return l, l, l 
-
-def redShader(render, **kwargs):
-    # Normal calculada por vertice
-    u, v, w = kwargs["baryCoords"]
-    b, g, r = kwargs["vColor"]
-    tA, tB, tC = kwargs["texCoords"]
-    nA, nB, nC = kwargs["normals"]
-
-    b /= 255
-    g /= 255
-    r /= 255
-
-    if render.active_texture:
-        # P = Au + Bv + Cw
-        tU = tA[0] * u + tB[0] * v + tC[0] * w
-        tV = tA[1] * u + tB[1] * v + tC[1] * w
-
-        texColor = render.active_texture.getColor(tU, tV)
-
-        b *= texColor[2]
-        g *= texColor[1]
-        r *= texColor[0]
-
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
-                        nA[1] * u + nB[1] * v + nC[1] * w,
-                        nA[2] * u + nB[2] * v + nC[2] * w]
-
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
-
-    b *= intensity
-    g *= intensity
-    r *= intensity
-
-    l = (r+b+g)/3
-    if intensity < 0:
-        return 0, 0, 0
-    else: 
-        return l, 0, 0 
-
-def toon2(render, **kwargs):
+def greyscale(render, **kwargs):
     
     u, v, w = kwargs["baryCoords"]
     b, g, r = kwargs["vColor"]
@@ -329,7 +266,7 @@ def toon2(render, **kwargs):
     b /= 255
     g /= 255
     r /= 255
-
+    greyscale = [0.5, 0.5, 0.5]
     if render.active_texture:
         # P = Au + Bv + Cw
         tU = tA[0] * u + tB[0] * v + tC[0] * w
@@ -337,38 +274,33 @@ def toon2(render, **kwargs):
 
         texColor = render.active_texture.getColor(tU, tV)
 
-        b *= texColor[2]
-        g *= texColor[1]
-        r *= texColor[0]
+        b *= texColor[2] 
+        g *= texColor[1] 
+        r *= texColor[0] 
+        
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
 
-    triangleNormal = np.array([nA[0] * u + nB[0] * v + nC[0] * w,
-                               nA[1] * u + nB[1] * v + nC[1] * w,
-                               nA[2] * u + nB[2] * v + nC[2] * w])
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
 
-    dirLight = np.array(render.dirLight)
-    intensity = np.dot(triangleNormal, -dirLight)
+    r *= intensity 
+    b *= intensity 
+    g *= intensity
 
-    if intensity < 0.2:
-        r,g,b = 0,0,1
-    elif intensity <= 0.3:
-        r,g,b = 0.5,0,0.5
-    elif intensity < 0.5:
-         r,g,b = 1,0,0
-    elif intensity <= 0.6:
-        r,g,b = 0.5,0.5,0
-    elif intensity < 0.8:
-        r,g,b = 0,1,0
-    elif intensity <= 1:
-        r,g,b = 0,0,0
+    avgrgb = (r + g + b) / 3
+
+    r = avgrgb
+    b = avgrgb
+    g = avgrgb
 
     if intensity > 0:
         return r, g, b
     else:
         return 0,0,0
 
-
-def blueShader(render, **kwargs):
-    # Normal calculada por vertice
+def toongreyscale(render, **kwargs):
     u, v, w = kwargs["baryCoords"]
     b, g, r = kwargs["vColor"]
     tA, tB, tC = kwargs["texCoords"]
@@ -389,19 +321,223 @@ def blueShader(render, **kwargs):
         g *= texColor[1]
         r *= texColor[0]
 
-    triangleNormal = [nA[0] * u + nB[0] * v + nC[0] * w,
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
                         nA[1] * u + nB[1] * v + nC[1] * w,
-                        nA[2] * u + nB[2] * v + nC[2] * w]
+                        nA[2] * u + nB[2] * v + nC[2] * w])
 
-    intensity = lpm.productoPunto(triangleNormal, [-a for a in render.dirLight])
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
+
+    if intensity < 0.2:
+        intensity = 0.1
+    elif intensity < 0.5:
+        intensity = 0.4
+    elif intensity < 0.8:
+        intensity = 0.7
+    elif intensity <= 1:
+        intensity = 1
 
     b *= intensity
     g *= intensity
     r *= intensity
 
-    l = (r+b+g)/3
+    avgrgb = (r + g + b) / 3
 
-    if intensity < 0:
-        return 0, 0, 0
-    else: 
-        return 0, 0, l 
+    r = avgrgb
+    b = avgrgb
+    g = avgrgb
+
+    if intensity > 0:
+        return r, g, b
+    else:
+        return 0,0,0
+
+def pinkjelly(render, **kwargs):
+    u, v, w = kwargs["baryCoords"]
+    b, g, r = kwargs["vColor"]
+    tA, tB, tC = kwargs["texCoords"]
+
+    b /= 255
+    g /= 255
+    r /= 255
+
+    blackwhite = [1.0,0,1.0]
+    if render.active_texture:
+        # P = Au + Bv + Cw
+        tU = tA[0] * u + tB[0] * v + tC[0] * w
+        tV = tA[1] * u + tB[1] * v + tC[1] * w
+        
+        texColor = render.active_texture.getColor(tU, tV)
+
+        b *= blackwhite[2]
+        g *= texColor[1]
+        r *= blackwhite[0]
+
+    return r, g, b
+
+def heatmap(render, **kwargs):
+    u, v, w = kwargs["baryCoords"]
+    b, g, r = kwargs["vColor"]
+    tA, tB, tC = kwargs["texCoords"]
+    nA, nB, nC = kwargs["normals"]
+
+    b /= 255
+    g /= 255
+    r /= 255
+
+    if render.active_texture:
+        # P = Au + Bv + Cw
+        tU = tA[0] * u + tB[0] * v + tC[0] * w
+        tV = tA[1] * u + tB[1] * v + tC[1] * w
+
+        texColor = render.active_texture.getColor(tU, tV)
+
+        b *= texColor[2]
+        g *= texColor[1]
+        r *= texColor[0]
+
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
+
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
+
+    r = 0
+    g = 0
+    b = 0
+
+    if intensity < 0.2:
+        b = 0.8
+    elif intensity < 0.5 and intensity >= 0.2:
+        b = 0.5
+        g = 1
+    elif intensity < 0.8 and intensity >= 0.5:
+        r = 0.3 
+        g = 0.8
+        b = 0.2
+    elif intensity <= 1 and intensity >= 0.8:
+        r = 1
+
+    if intensity > 0:
+        return r, g, b
+    else:
+        return 0,0,1
+
+def invertedcolor(render, **kwargs):
+    
+    u, v, w = kwargs["baryCoords"]
+    b, g, r = kwargs["vColor"]
+    tA, tB, tC = kwargs["texCoords"]
+    nA, nB, nC = kwargs["normals"]
+
+    b /= 255
+    g /= 255
+    r /= 255
+    greyscale = [0.5, 0.5, 0.5]
+    if render.active_texture:
+        # P = Au + Bv + Cw
+        tU = tA[0] * u + tB[0] * v + tC[0] * w
+        tV = tA[1] * u + tB[1] * v + tC[1] * w
+
+        texColor = render.active_texture.getColor(tU, tV)
+
+        b *= texColor[2] 
+        g *= texColor[1] 
+        r *= texColor[0] 
+        
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
+
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
+
+    r *= intensity 
+    b *= intensity 
+    g *= intensity
+
+    r = 1 - r
+    g = 1 - g
+    b = 1 - b
+
+    if intensity > 0:
+        return r, g, b
+    else:
+        return 0,0,0
+
+def randomstatic(render, **kwargs):
+    u, v, w = kwargs["baryCoords"]
+    b, g, r = kwargs["vColor"]
+    tA, tB, tC = kwargs["texCoords"]
+    nA, nB, nC = kwargs["normals"]
+
+    b /= 255
+    g /= 255
+    r /= 255
+
+    if render.active_texture:
+        # P = Au + Bv + Cw
+        tU = tA[0] * u + tB[0] * v + tC[0] * w
+        tV = tA[1] * u + tB[1] * v + tC[1] * w
+
+        texColor = render.active_texture.getColor(tU, tV)
+
+
+        b *= random.random()
+        g *= random.random()
+        r *= random.random()
+        
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
+
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
+
+    r *= intensity 
+    b *= intensity 
+    g *= intensity
+
+    if intensity > 0:
+        return r, g, b
+    else:
+        return 0,0,0
+
+def hologram(render, **kwargs):
+
+    u, v, w = kwargs["baryCoords"]
+    b, g, r = kwargs["vColor"]
+    tA, tB, tC = kwargs["texCoords"]
+    nA, nB, nC = kwargs["normals"]
+
+    b /= 255
+    g /= 255
+    r /= 255
+
+    if render.active_texture:
+        # P = Au + Bv + Cw
+        tU = tA[0] * u + tB[0] * v + tC[0] * w
+        tV = tA[1] * u + tB[1] * v + tC[1] * w
+
+        texColor = render.active_texture.getColor(tU, tV)
+
+        b *= texColor[2]
+        g *= texColor[1]
+        r *= texColor[0]
+
+    triangleNormal = ([nA[0] * u + nB[0] * v + nC[0] * w,
+                        nA[1] * u + nB[1] * v + nC[1] * w,
+                        nA[2] * u + nB[2] * v + nC[2] * w])
+
+    dirLight = render.dirLight
+    intensity = lbm.dot(triangleNormal, [-dirLight.x,-dirLight.y,-dirLight.z])
+
+    b *= intensity
+    g *= intensity
+    r *= intensity
+
+    if intensity > 0:
+        return r, g, b
+    else:
+        return 0,0,0

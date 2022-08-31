@@ -1,6 +1,7 @@
 import struct
 from collections import namedtuple
-import lbmath as lpm
+import lbmath as lbm
+
 from math import cos, sin, tan, pi
 
 import random
@@ -72,42 +73,47 @@ class Renderer(object):
         self.vpWidth = width
         self.vpHeight = height
 
-        self.viewportMatrix = [[width/2,0,0,posX+width/2],
-                                         [0,height/2,0,posY+height/2],
-                                         [0,0,0.5,0.5],
-                                         [0,0,0,1]]
+        self.viewportMatrix = ([[width/2,0,0,posX+width/2],
+                                [0,height/2,0,posY+height/2],
+                                [0,0,0.5,0.5],
+                                [0,0,0,1]])
 
         self.glProjectionMatrix()
 
     def glViewMatrix(self, translate = V3(0,0,0), rotate = V3(0,0,0)):
         self.camMatrix = self.glCreateObjectMatrix(translate, rotate)
-        self.viewMatrix = lpm.matriz_inversa(self.camMatrix)#np.linalg.inv(self.camMatrix)#Pendiente
+        self.viewMatrix = lbm.MatInv(self.camMatrix)
 
-    def glLookAt(self, eye, camPosition = V3(0,0,0)):
-        forward = lpm.suma_o_resta_vectores(camPosition, eye, True) #np.subtract(camPosition, eye)
-        forward = lpm.normalizaVector(forward)#forward / np.linalg.norm(forward)
+    def glLookAt(self, eye, camPosition):
+        forward = lbm.subtractArrays([camPosition.x, camPosition.y, camPosition.z], [eye.x, eye.y, eye.z])
+        forward[:] = [x / lbm.norm(forward) for x in forward]
 
-        right = lpm.productoCruz(V3(0, 1, 0), forward) #np.cross(V3(0,1,0), forward)
-        right = lpm.normalizaVector(right)#right / np.linalg.norm(right)
+        
+        
+        right = lbm.crossProduct(V3(0,1,0), forward)
+        # right = right / lbm.norm(right)
+        right[:] = [x / lbm.norm(right) for x in right]
 
-        up = lpm.productoCruz(forward, right)#np.cross(forward, right)
-        up = lpm.normalizaVector(up) #up / np.linalg.norm(up)
+        up = lbm.crossProduct(forward, right)
+        # up = up / lbm.norm(up)
+        up[:] = [x / lbm.norm(up) for x in up]
 
-        self.camMatrix = [[right[0],up[0],forward[0],camPosition[0]],
-                                    [right[1],up[1],forward[1],camPosition[1]],
-                                    [right[2],up[2],forward[2],camPosition[2]],
-                                    [0,0,0,1]]
-        self.viewMatrix = lpm.matriz_inversa(self.camMatrix)
+        self.camMatrix = ([[right[0],up[0],forward[0],camPosition[0]],
+                            [right[1],up[1],forward[1],camPosition[1]],
+                            [right[2],up[2],forward[2],camPosition[2]],
+                            [0,0,0,1]])
+
+        self.viewMatrix = lbm.MatInv(self.camMatrix)
 
     def glProjectionMatrix(self, n = 0.1, f = 1000, fov = 60):
         aspectRatio = self.vpWidth / self.vpHeight
         t = tan( (fov * pi / 180) / 2) * n
         r = t * aspectRatio
 
-        self.projectionMatrix = [[n/r,0,0,0],
-                                           [0,n/t,0,0],
-                                           [0,0,-(f+n)/(f-n),-(2*f*n)/(f-n)],
-                                           [0,0,-1,0]]
+        self.projectionMatrix = ([[n/r,0,0,0],
+                                [0,n/t,0,0],
+                                [0,0,-(f+n)/(f-n),-(2*f*n)/(f-n)],
+                                [0,0,-1,0]])
 
 
 
@@ -153,42 +159,49 @@ class Renderer(object):
         yaw   *= pi/180
         roll  *= pi/180
 
-        pitchMat = [[1, 0, 0, 0],
-                              [0, cos(pitch),-sin(pitch), 0],
-                              [0, sin(pitch), cos(pitch), 0],
-                              [0, 0, 0, 1]]
+        pitchMat = ([[1, 0, 0, 0],
+                    [0, cos(pitch),-sin(pitch), 0],
+                    [0, sin(pitch), cos(pitch), 0],
+                    [0, 0, 0, 1]])
 
-        yawMat = [[cos(yaw), 0, sin(yaw), 0],
-                            [0, 1, 0, 0],
-                            [-sin(yaw), 0, cos(yaw), 0],
-                            [0, 0, 0, 1]]
+        yawMat = ([[cos(yaw), 0, sin(yaw), 0],
+                    [0, 1, 0, 0],
+                    [-sin(yaw), 0, cos(yaw), 0],
+                    [0, 0, 0, 1]])
 
-        rollMat = [[cos(roll),-sin(roll), 0, 0],
-                             [sin(roll), cos(roll), 0, 0],
-                             [0, 0, 1, 0],
-                             [0, 0, 0, 1]]
+        rollMat = ([[cos(roll),-sin(roll), 0, 0],
+                    [sin(roll), cos(roll), 0, 0],
+                    [0, 0, 1, 0],
+                    [0, 0, 0, 1]])
+        
+        res1 = lbm.matrixMult(pitchMat, yawMat)
+        resFinal = lbm.matrixMult(res1, rollMat)
 
-        return lpm.multMatrixes(pitchMat, yawMat, rollMat)
+        return resFinal
+
 
     def glCreateObjectMatrix(self, translate = V3(0,0,0), rotate = V3(0,0,0), scale = V3(1,1,1)):
 
-        translation = [[1, 0, 0, translate.x],
-                                 [0, 1, 0, translate.y],
-                                 [0, 0, 1, translate.z],
-                                 [0, 0, 0, 1]]
+        translation = ([[1, 0, 0, translate.x],
+                        [0, 1, 0, translate.y],
+                        [0, 0, 1, translate.z],
+                        [0, 0, 0, 1]])
 
         rotation = self.glCreateRotationMatrix(rotate.x, rotate.y, rotate.z)
 
-        scaleMat = [[scale.x, 0, 0, 0],
-                              [0, scale.y, 0, 0],
-                              [0, 0, scale.z, 0],
-                              [0, 0, 0, 1]]
+        scaleMat = ([[scale.x, 0, 0, 0],
+                    [0, scale.y, 0, 0],
+                    [0, 0, scale.z, 0],
+                    [0, 0, 0, 1]])
+        
+        res1 = lbm.matrixMult(translation, rotation)
+        resFinal = lbm.matrixMult(res1, scaleMat)
 
-        return lpm.multMatrixes(translation , rotation , scaleMat)
+        return resFinal
 
     def glTransform(self, vertex, matrix):
         v = V4(vertex[0], vertex[1], vertex[2], 1)
-        vt = lpm.matriz_por_vector(matrix, v)
+        vt = lbm.matMultVect(matrix, v)
         vf = V3(vt[0] / vt[3],
                 vt[1] / vt[3],
                 vt[2] / vt[3])
@@ -197,8 +210,7 @@ class Renderer(object):
 
     def glDirTransform(self, dirVector, rotMatrix):
         v = V4(dirVector[0], dirVector[1], dirVector[2], 0)
-        vt = lpm.matriz_por_vector(rotMatrix, v)#rotMatrix @ v
-        #vt = vt[0]
+        vt = lbm.matMultVect(rotMatrix, v)
         vf = V3(vt[0],
                 vt[1],
                 vt[2])
@@ -207,8 +219,9 @@ class Renderer(object):
 
     def glCamTransform(self, vertex):
         v = V4(vertex[0], vertex[1], vertex[2], 1)
-        vt = lpm.matriz_por_vector(self.viewportMatrix, lpm.matriz_por_vector(self.projectionMatrix, lpm.matriz_por_vector(self.viewMatrix, v)))#self.viewportMatrix @ self.projectionMatrix @ self.viewMatrix @ v
-        #vt = vt[0]
+        vt = lbm.matrixMult(self.viewportMatrix, self.projectionMatrix)
+        vt = lbm.matrixMult(vt, self.viewMatrix)
+        vt = lbm.matMultVect(vt, v)
         vf = V3(vt[0] / vt[3],
                 vt[1] / vt[3],
                 vt[2] / vt[3])
@@ -389,10 +402,9 @@ class Renderer(object):
         maxX = round(max(A.x, B.x, C.x))
         maxY = round(max(A.y, B.y, C.y))
 
-        triangleNormal = lpm.productoCruz(lpm.suma_o_resta_vectores(verts[1], verts[0], True), lpm.suma_o_resta_vectores(verts[2], verts[0], True))#np.cross( np.subtract(verts[1], verts[0]), np.subtract(verts[2],verts[0]))
+        triangleNormal = lbm.crossProduct( lbm.subtractArrays([verts[1].x, verts[1].y, verts[1].z], [verts[0].x, verts[0].y, verts[0].z]), lbm.subtractArrays([verts[2].x, verts[2].y, verts[2].z], [verts[0].x, verts[0].y, verts[0].z]))
         # normalizar
-        triangleNormal = lpm.normalizaVector(triangleNormal)
-        #triangleNormal = triangleNormal / np.linalg.norm(triangleNormal)
+        # triangleNormal[:] = [x / lbm.norm(triangleNormal) for x in triangleNormal]
 
 
         for x in range(minX, maxX + 1):
@@ -449,7 +461,6 @@ class Renderer(object):
             for y in range(self.height):
                 for x in range(self.width):
                     file.write(self.pixels[x][y])
-
 
 
 

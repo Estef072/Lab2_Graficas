@@ -1,6 +1,4 @@
-
 import struct
-
 class Texture(object):
     def __init__(self, filename):
 
@@ -32,6 +30,4 @@ class Texture(object):
             return self.pixels[int(v * self.height)][int(u * self.width)]
         else:
             return None
-
-
 

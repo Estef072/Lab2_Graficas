@@ -1,6 +1,6 @@
 from gl import Renderer, color, V3, V2
 from texture import Texture
-from shaders import flat, unlit, gourad, toon, glow, textureBlend, grayShader,  redShader, blueShader
+from shaders import flat, greyscale, hologram, invertedcolor, randomstatic, unlit, gourad, toon, glow, textureBlend, pinkjelly, toongreyscale, heatmap
 
 width = 960
 height = 540
@@ -10,30 +10,30 @@ rend = Renderer(width, height)
 rend.dirLight = V3(1, 0, 0)
 
 rend.active_texture = Texture("model.bmp")
-rend.active_shader = grayShader
+rend.active_shader = greyscale
 
-rend.glLoadModel("models/cuerpo.obj",
-                 translate = V3(-8, 3, -10),
+rend.glLoadModel("model.obj",
+                 translate = V3(-8, -2, -10),
                  scale = V3(2,2,2),
                  rotate = V3(0,0,0))
-rend.active_shader = redShader
+rend.active_shader = hologram
 
-rend.glLoadModel("models/cuerpo.obj",
+rend.glLoadModel("model.obj",
                  translate = V3(-4, 3, -10),
                  scale = V3(2,2,2),
                  rotate = V3(0,0,0))
 
-rend.active_shader = blueShader
+rend.active_shader = invertedcolor
 
-rend.glLoadModel("models/cuerpo.obj",
+rend.glLoadModel("model.obj",
                  translate = V3(0, 3, -10),
                  scale = V3(2,2,2),
                  rotate = V3(0,0,0))
 
-rend.active_shader = grayShader
+rend.active_shader = randomstatic
 
-rend.glLoadModel("models/cuerpo.obj",
-                 translate = V3(4, 3, -10),
+rend.glLoadModel("model.obj",
+                 translate = V3(4, -1, -10),
                  scale = V3(2,2,2),
                  rotate = V3(0,0,0))
 
